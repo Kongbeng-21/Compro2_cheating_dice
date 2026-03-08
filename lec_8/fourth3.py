@@ -1,9 +1,6 @@
 import tkinter as tk
 import random
 
-# ==============================
-# Shape Base Class
-# ==============================
 class Shape:
 
     def __init__(self, canvas, canvas_width, canvas_height, color, outline):
@@ -53,9 +50,6 @@ class Shape:
             self.vy = -self.vy
 
 
-# ==============================
-# Ball Class
-# ==============================
 class Ball(Shape):
 
     def __init__(self,*args,**kwargs):
@@ -71,10 +65,6 @@ class Ball(Shape):
             outline=self.outline
         )
 
-
-# ==============================
-# Rectangle Class
-# ==============================
 class Rectangle(Shape):
 
     def __init__(self,*args,**kwargs):
@@ -90,10 +80,6 @@ class Rectangle(Shape):
             outline=self.outline
         )
 
-
-# ==============================
-# Canvas with Animation
-# ==============================
 class BouncingShapeCanvas(tk.Canvas):
 
     def __init__(self, master, width=400, height=300,
@@ -120,7 +106,7 @@ class BouncingShapeCanvas(tk.Canvas):
                 shape = Rectangle(self,width,height,color,outline)
 
             self.shapes.append(shape)
-
+        self.bind("<Configure>", self.on_resize)
         self.animate()
 
 
@@ -143,11 +129,35 @@ class BouncingShapeCanvas(tk.Canvas):
         for shape in self.shapes:
             self.itemconfig(shape.id,fill=color)
 
+    def on_resize(self, event):
+        self.keep_shapes_inside()
+    
+    def keep_shapes_inside(self):
 
+        width = self.winfo_width()
+        height = self.winfo_height()
 
-# ==============================
-# Config Panel
-# ==============================
+        for shape in self.shapes:
+
+            pos = self.coords(shape.id)
+
+            dx = 0
+            dy = 0
+
+            if pos[0] < 0:
+                dx = -pos[0]
+
+            if pos[2] > width:
+                dx = width - pos[2]
+
+            if pos[1] < 0:
+                dy = -pos[1]
+
+            if pos[3] > height:
+                dy = height - pos[3]
+
+            self.move(shape.id, dx, dy)
+
 class ConfigPanel(tk.LabelFrame):
 
     def __init__(self, master, canvas, title):
@@ -197,28 +207,20 @@ class ConfigPanel(tk.LabelFrame):
         self.canvas.set_color(self.color_var.get())
 
 
-
-# ==============================
-# MAIN GUI
-# ==============================
 def main():
 
     root = tk.Tk()
     root.title("Interactive Multi-Canvas Bouncing Shapes")
-
-    # LEFT CONTROL PANEL
+    
     left_frame = tk.Frame(root,bg="white")
     left_frame.grid(row=0,column=0,sticky="ns",padx=10,pady=10)
 
-    # RIGHT CANVAS GRID
     right_frame = tk.Frame(root)
     right_frame.grid(row=0,column=1,sticky="nsew")
 
     root.grid_columnconfigure(1,weight=1)
     root.grid_rowconfigure(0,weight=1)
 
-
-    # CREATE CANVASES
     c1 = BouncingShapeCanvas(right_frame,color="#FF9800",outline="#E65100")
     c1.grid(row=0,column=0,sticky="nsew",padx=5,pady=5)
 
@@ -231,15 +233,11 @@ def main():
     c4 = BouncingShapeCanvas(right_frame,color="#9C27B0",outline="#6A1B9A")
     c4.grid(row=1,column=1,sticky="nsew",padx=5,pady=5)
 
-
-    # RESIZE GRID
     right_frame.grid_rowconfigure(0,weight=1)
     right_frame.grid_rowconfigure(1,weight=1)
     right_frame.grid_columnconfigure(0,weight=1)
     right_frame.grid_columnconfigure(1,weight=1)
 
-
-    # CONFIG PANELS
     ConfigPanel(left_frame,c1,"Panel 1 Config").pack(fill="x",pady=5)
     ConfigPanel(left_frame,c2,"Panel 2 Config").pack(fill="x",pady=5)
     ConfigPanel(left_frame,c3,"Panel 3 Config").pack(fill="x",pady=5)
@@ -248,7 +246,5 @@ def main():
 
     root.mainloop()
 
-
-# RUN PROGRAM
 if __name__ == "__main__":
     main()
